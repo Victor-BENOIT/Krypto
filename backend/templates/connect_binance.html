@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Connecter Binance{% endblock %}
+{% block content %}
+<h2>Connecter Binance</h2>
+<form method="post">
+    <label>API Key : <input name="api_key" required></label><br />
+    <label>API Secret : <input name="api_secret" required></label><br />
+    <button type="submit">Enregistrer</button>
+</form>
+{% endblock %}

@@ -1,9 +1,5 @@
-fastapi
-uvicorn[standard]
+flask
 pymongo
 passlib[bcrypt]
-cryptography
-pydantic
-requests
+python-dotenv
 python-binance
-substrate-interface

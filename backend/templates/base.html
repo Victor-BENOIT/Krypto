@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Krypto - {% block title %}{% endblock %}</title>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">Accueil</a> |
+        {% if session.get('username') %}
+            <span>Connecté : {{ session.get('username') }}</span> |
+            <a href="{{ url_for('connect_binance') }}">Connecter Binance</a> |
+
+            <form action="{{ url_for('test_binance_key') }}" method="post" style="display:inline;">
+                <button type="submit">Tester la clé Binance</button>
+            </form> |
+
+            <a href="{{ url_for('logout') }}">Déconnexion</a>
+        {% else %}
+            <a href="{{ url_for('register') }}">S'enregistrer</a> |
+            <a href="{{ url_for('login') }}">Se connecter</a>
+        {% endif %}
+    </nav>
+
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li style="color: {% if category == 'error' %}red{% else %}green{% endif %};">
+                {{ message }}
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</body>
+</html>

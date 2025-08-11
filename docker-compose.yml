@@ -4,7 +4,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: docker/Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: krypto_backend
     ports:
       - "8000:8000"
