@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: krypto_backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+    networks:
+      - krypto_net
+
+  mongo:
+    image: mongo:6.0
+    container_name: krypto_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - krypto_net
+
+  airflow:
+    build:
+      context: ./airflow
+      dockerfile: ../docker/Dockerfile.airflow
+    container_name: krypto_airflow
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+    networks:
+      - krypto_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: krypto_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - krypto_net
+
+networks:
+  krypto_net:
+
+volumes:
+  mongo_data:
