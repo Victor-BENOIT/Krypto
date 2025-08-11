@@ -1,0 +1,23 @@
+# API + Backend
+fastapi
+uvicorn[standard]
+pymongo
+python-dotenv
+passlib[bcrypt]
+cryptography
+pydantic
+requests
+python-binance
+substrate-interface
+
+# Frontend Python
+plotly
+dash
+
+# Airflow
+apache-airflow
+
+# Dev utils
+black
+flake8
+pytest

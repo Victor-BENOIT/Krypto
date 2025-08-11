@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pymongo
+passlib[bcrypt]
+cryptography
+pydantic
+requests
+python-binance
+substrate-interface

@@ -1,0 +1,6 @@
+apache-airflow
+pymongo
+python-dotenv
+requests
+python-binance
+substrate-interface
