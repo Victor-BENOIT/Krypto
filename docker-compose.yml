@@ -8,6 +8,8 @@ services:
     container_name: krypto_backend
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - MONGO_URI=mongodb://mongo:27017
     depends_on:

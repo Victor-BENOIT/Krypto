@@ -1,9 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from pymongo import MongoClient
 from passlib.hash import bcrypt
-import os
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceRequestException
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+fernet_key = os.getenv("FERNET_KEY")
+if fernet_key is None:
+    raise ValueError("FERNET_KEY non trouvé dans les variables d'environnement. Veuillez générer une clé Fernet et l'ajouter à votre fichier .env.")
+
+fernet = Fernet(fernet_key.encode())
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key")
@@ -51,10 +61,6 @@ def logout():
     return redirect(url_for("index"))
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
-
-
 @app.route("/connect_binance", methods=["GET", "POST"])
 def connect_binance():
     # Pour l'instant, on ne gère pas la session utilisateur, on suppose que username est 'guest'
@@ -68,11 +74,14 @@ def connect_binance():
         api_key = request.form["api_key"].strip()
         api_secret = request.form["api_secret"].strip()
 
-        # Sauvegarde ou mise à jour dans la collection users
+        encrypted_api_key = fernet.encrypt(api_key.encode()).decode()
+        encrypted_api_secret = fernet.encrypt(api_secret.encode()).decode()
+
         db.users.update_one(
             {"username": username},
-            {"$set": {"binance_api_key": api_key, "binance_api_secret": api_secret}}
+            {"$set": {"binance_api_key": encrypted_api_key, "binance_api_secret": encrypted_api_secret}}
         )
+
         flash("Clés Binance enregistrées avec succès !", "success")
         return redirect(url_for("index"))
 
@@ -87,11 +96,18 @@ def test_binance_key():
         return redirect(url_for("login"))
 
     user = db.users.find_one({"username": username})
-    api_key = user.get("binance_api_key")
-    api_secret = user.get("binance_api_secret")
+    encrypted_api_key = user.get("binance_api_key")
+    encrypted_api_secret = user.get("binance_api_secret")
 
-    if not api_key or not api_secret:
+    if not encrypted_api_key or not encrypted_api_secret:
         flash("Vous n'avez pas encore enregistré vos clés Binance.", "error")
+        return redirect(url_for("connect_binance"))
+
+    try:
+        api_key = fernet.decrypt(encrypted_api_key.encode()).decode()
+        api_secret = fernet.decrypt(encrypted_api_secret.encode()).decode()
+    except Exception as e:
+        flash("Erreur lors du déchiffrement des clés Binance.", "error")
         return redirect(url_for("connect_binance"))
 
     try:
@@ -106,3 +122,35 @@ def test_binance_key():
         flash(f"Erreur inattendue : {str(e)}", "error")
 
     return redirect(url_for("index"))
+
+@app.route('/portfolio')
+def portfolio():
+    # Ici on suppose que username est en session (géré après login)
+    username = session.get("username")
+    if not username:
+        return redirect(url_for('login'))
+
+    # fetch_and_store_balances("username", fernet, db)
+    # fetch_and_update_portfolio_value("username", fernet, db)
+    user_portfolio = db.user_portfolios.find_one({"username": username})
+    if not user_portfolio or "binance_balances" not in user_portfolio:
+        assets_available = []
+        assets_loan_debt = []
+        total_value = 0
+    else:
+        assets_available = user_portfolio["binance_balances"].get("available", [])
+        assets_loan_debt = user_portfolio["binance_balances"].get("loan_debt", [])
+        total_value = user_portfolio["binance_balances"].get("total_portfolio_value", 0)
+
+    return render_template(
+        "portfolio.html",
+        assets_available=assets_available,
+        assets_loan_debt=assets_loan_debt,
+        total_value=total_value,
+        username=username
+    )
+
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=True)

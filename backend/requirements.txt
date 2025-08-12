@@ -3,3 +3,4 @@ pymongo
 passlib[bcrypt]
 python-dotenv
 python-binance
+cryptography
